@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Goal Tracker & Journal</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Margi's Goal Tracker</h1>
+    <p class="date-time" id="date-time"></p>
+    <!-- Summary for past entries -->
+    <div class="summary">
+      <p id="avg-sleep">Average Sleep: --</p>
+      <p id="mood-summary">Mood Counts: --</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Daily Inspiration</h2>
+      <blockquote>
+        "The future depends on what you do today." – Mahatma Gandhi
+      </blockquote>
+    </section>
+
+    <section class="card">
+      <h2>Upload Your Daily Image</h2>
+      <input type="file" accept="image/*">
+    </section>
+
+    <section class="card">
+      <h2>Journal Entry</h2>
+      <textarea id="journal-entry" placeholder="Write about your day..."></textarea>
+    </section>
+
+    <section class="card">
+      <h2>Sleep Tracker</h2>
+      <label for="sleep">Hours of sleep:</label>
+      <input type="number" id="sleep" min="0" max="24">
+      <div class="sleep-svg">
+        <svg width="100" height="100">
+          <circle id="sleep-circle" cx="50" cy="50" r="40" fill="lightblue" />
+          <text x="50%" y="50%" text-anchor="middle" dy=".3em" id="sleep-text">ZZZ</text>
+        </svg>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Mood Check</h2>
+      <label><input type="checkbox" value="Energetic"> Energetic</label>
+      <label><input type="checkbox" value="Anxious"> Anxious</label>
+      <label><input type="checkbox" value="Fine"> Fine</label>
+      <label><input type="checkbox" value="Happy"> Happy</label>
+      <label><input type="checkbox" value="Indifferent"> Indifferent</label>
+      <label><input type="checkbox" value="Confident"> Confident</label>
+    </section>
+
+    <section class="card submit-card">
+      <button type="button" class="submit-btn" id="submit-btn">Submit Entry</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>Goal Tracker & Journal © 2025</p>
+  </footer>
+
+  <script>
+    // --- Update date and time ---
+    function updateDateTime() {
+      const now = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const dateStr = now.toLocaleDateString(undefined, options);
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById("date-time").textContent = `${dateStr} | ${timeStr}`;
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+
+    // --- Dummy data for past entries ---
+    const entries = [
+      { date: '2025-08-29', sleep: 7, moods: ['Energetic', 'Happy'] },
+      { date: '2025-08-30', sleep: 6, moods: ['Anxious', 'Fine'] },
+      { date: '2025-08-31', sleep: 8, moods: ['Confident', 'Happy'] }
+    ];
+
+    // --- Update summary display ---
+    function updateSummary() {
+      // Compute average sleep
+      const totalSleep = entries.reduce((sum, e) => sum + e.sleep, 0);
+      const avgSleep = (totalSleep / entries.length).toFixed(1);
+      document.getElementById('avg-sleep').textContent = `Average Sleep: ${avgSleep} hrs`;
+
+      // Compute mood counts
+      const moodCounts = {};
+      entries.forEach(e => {
+        e.moods.forEach(mood => {
+          moodCounts[mood] = (moodCounts[mood] || 0) + 1;
+        });
+      });
+      let moodText = Object.entries(moodCounts).map(([mood, count]) => `${mood}: ${count}`).join(', ');
+      document.getElementById('mood-summary').textContent = `Mood Counts: ${moodText}`;
+    }
+    updateSummary();
+
+    // --- Update sleep circle dynamically ---
+    const sleepInput = document.getElementById('sleep');
+    const sleepCircle = document.getElementById('sleep-circle');
+    const sleepText = document.getElementById('sleep-text');
+
+    sleepInput.addEventListener('input', () => {
+      const value = Number(sleepInput.value);
+      sleepText.textContent = value ? `${value}h` : 'ZZZ';
+      // scale circle radius from 20 to 50 based on sleep hours (0-12)
+      const r = Math.min(Math.max(value * 4, 20), 50);
+      sleepCircle.setAttribute('r', r);
+    });
+
+    // --- Handle submit button ---
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.addEventListener('click', () => {
+      const sleepHours = Number(sleepInput.value) || 0;
+      const checkedMoods = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+
+      // Create today's entry
+      const today = new Date().toISOString().split('T')[0];
+      const existingIndex = entries.findIndex(e => e.date === today);
+      const newEntry = { date: today, sleep: sleepHours, moods: checkedMoods };
+
+      if (existingIndex >= 0) {
+        entries[existingIndex] = newEntry; // overwrite if already exists
+      } else {
+        entries.push(newEntry);
+      }
+
+      updateSummary();
+      alert('Entry submitted!');
+    });
+  </script>
+</body>
+</html>
